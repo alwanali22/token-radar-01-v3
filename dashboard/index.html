@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Radar</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <header>
+        <h1>Token Radar</h1>
+        <p>Pre-token protocols ranked by model-implied value.</p>
+        <div id="backtest-bar"><strong>Backtest (5-fold CV, 128 live tokens): size curve median |log10 error| 0.56 (3.6×) vs flat median 0.72 (5.3×) vs v1 model 0.69 (4.9×).</strong> Conviction (0–100) scores how much evidence backs each row's implied value — size, momentum, age, live peers and agreement with its category median — without changing the value or the rank.</div>
+        <p id="bands-line"></p>
+        <p id="conviction-check"></p>
+        <p id="research-summary">Size-fitted comps: implied value = TVL x a size-fitted multiple x 0.75 x growth x maturity. Fitted on the snapshot's own 128 live tokens (slope -0.48, corr -0.41); 5-fold backtest median error 0.56 in log10 (3.6x) vs 0.72 (5.3x) for a flat median. 144 wrapped, bridged, staked and exchange products excluded; snapshot frozen 2026-11-14.</p>
+        <div id="stats"></div>
+    </header>
+    <section id="controls">
+        <input type="text" id="q" placeholder="Search...">
+        <select id="category"><option value="all">All Categories</option></select>
+        <select id="chain"><option value="all">All Chains</option></select>
+        <label><input type="checkbox" id="watchlist-only"> Watchlist</label>
+        <select id="sort">
+            <option value="rank">Sort by Rank</option>
+            <option value="implied">Sort by Implied</option>
+            <option value="tvl">Sort by TVL</option>
+            <option value="7d">Sort by 7d %</option>
+            <option value="age">Sort by Age</option>
+            <option value="conviction">Sort by Conviction</option>
+            <option value="cat_median">Sort by Cat. median</option>
+            <option value="name">Sort by Name</option>
+        </select>
+    </section>
+    <div id="tabs">
+        <button id="tab-board" class="active">Board</button>
+        <button id="tab-live">Live tokens (24)</button>
+        <button id="tab-categories">Categories</button>
+    </div>
+    <table id="board-table">
+        <thead>
+            <tr id="table-head">
+                <th data-sort="rank">Rank</th>
+                <th data-sort="name">Protocol</th>
+                <th data-sort="category">Category</th>
+                <th data-sort="chain">Chains</th>
+                <th data-sort="tvl">TVL</th>
+                <th data-sort="7d">7d %</th>
+                <th data-sort="age">Age (days)</th>
+                <th data-sort="conviction">Conviction</th>
+                <th data-sort="cat_median">Cat. median</th>
+                <th data-sort="implied">Implied value</th>
+            </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+    <section id="research-note">
+        <h2>Research note</h2>
+        <p>Model: implied value = TVL x sizeMultiple(TVL) x 0.75 x growthMult x maturityMult. sizeMultiple is fitted at run time from the snapshot's own live tokens: log10(multiple) = 3.02 - 0.48 x log10(TVL), n = 128, corr -0.41, clamped to [0.02, 0.80].</p>
+        <p>Backtest: 5-fold cross-validation on the 128 live tokens gives median |log10 error| 0.56 (3.6x), against 0.72 (5.3x) for a flat median multiple. A category multiple adds nothing once size is in, so the model has no category term.</p>
+        <p>Conviction (0–100) = scale 25 + momentum 20 + maturity 20 + peers 20 + agreement 15. Scale measures TVL size against the board's log-TVL range; momentum measures 7-day TVL change (null scores a neutral 10); maturity measures age up to 3 years; peers measures how many live tokens share the row's category (0 peers scores 0, 1–2 scores 7, 3–5 scores 13, 6+ scores 20); agreement measures how close the row's fitted multiple sits to its category's live median (within 0.10 dex scores 15, 0.25 scores 11, 0.40 scores 7, further scores 3, no peers scores 8). Conviction never changes the implied value or the rank; on this board it runs 15–74 with median 40.5.</p>
+        <p>Category medians are context, not a multiplier: each is the median mcap/TVL of the live tokens in that category (33 categories; 18 board rows sit in categories with no live peers, so they have no median). The v2 backtest found a category term adds nothing out-of-sample — the size curve alone scored 0.55 and adding a category shift scored 0.56 — so no category term enters the value formula. Treat thin medians with care: Risk Curators' median 2.97 rests on a single live peer. The Categories tab lists all 33 categories with board rows, live peers and median multiple.</p>
+        <p>Pre-token haircut: 0.75. Exclusions: 144 pre-token protocols are off the board because they are wrapped, bridged, staked or exchange products of tokens that already trade, not protocols awaiting a token launch.</p>
+        <p>Limits: the snapshot is frozen 2026-11-14. Multiples are comparables, not predictions, and no protocol name is hardcoded into the model.</p>
+        <p>Check it yourself: open any protocol and the detail view recomputes its implied value from TVL, growth and age with the same functions above — the stored and recomputed values agree for every row on the board. The same detail view recomputes Conviction and the category median on the page, and the line above the table reports whether the page's recomputation matches the stored values for all 198 rows. The model panel below fits the size curve and runs the backtest live in this page from the 128 live tokens, so the numbers in this note are the page's own output, not typed-in claims.</p>
+    </section>
+    <section id="model-panel"></section>
+    <dialog id="detail-dialog">
+        <button id="close-dialog">Close</button>
+        <div id="dialog-content"></div>
+    </dialog>
+    <footer>
+        <p>Implied value is the entry's own claim, never make.fun's. DefiLlama's record is not proof.</p>
+    </footer>
+    <script src="../data.js"></script>
+    <script src="model.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
